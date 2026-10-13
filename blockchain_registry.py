@@ -59,10 +59,14 @@ def register_file_on_chain(cid, filename, on_prepared=None):
     contract = get_contract(w3)
     account = w3.eth.account.from_key(private_key)
 
-    tx = contract.functions.registerFile(cid, filename).build_transaction({
+    register = contract.functions.registerFile(cid, filename)
+    estimated_gas = register.estimate_gas({'from': account.address})
+    # Estimate for this payload and current contract state, with 20% headroom.
+    gas_limit = (estimated_gas * 120 + 99) // 100
+    tx = register.build_transaction({
         'from': account.address,
         'nonce': w3.eth.get_transaction_count(account.address, 'pending'),
-        'gas': 300000,
+        'gas': gas_limit,
         'gasPrice': w3.eth.gas_price,
     })
 
